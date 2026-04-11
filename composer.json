@@ -2,7 +2,7 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "devmasnaodev/cloud-engine",
     "type": "project",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "description": "A Laravel application for Cloud Engine, a platform for managing cloud resources.",
     "keywords": [
         "laravel",
