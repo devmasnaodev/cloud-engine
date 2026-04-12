@@ -8,7 +8,9 @@ use App\Core\Servers\Contracts\RemoteCommandExecutorInterface;
 use App\Core\Servers\Execution\RemoteCommandOptions;
 use App\Core\Servers\Models\Server;
 use App\Core\Servers\Services\ServerInfoDetector;
+use App\Core\Shell\Bash\Commands\Config\Fail2ban;
 use App\Core\Shell\Bash\Commands\InstallPackages;
+use App\Core\Shell\Bash\Commands\UpgradePackages;
 
 it('detects remote server info through the server info detector', function () {
     $executor = new class implements RemoteCommandExecutorInterface
@@ -107,7 +109,14 @@ it('uses the expected default package list in the install packages command', fun
     expect($command->getPackages())->toBe(['curl', 'git', 'unzip', 'fail2ban', 'ufw'])
         ->and($command->command())->toContain("'curl'")
         ->and($command->command())->toContain("'fail2ban'")
-        ->and($command->command())->toContain("'ufw'");
+        ->and($command->command())->toContain("'ufw'")
+        ->and($command->toArray()['timeout'])->toBe(900);
+});
+
+it('uses extended timeouts for long-running initial setup steps', function () {
+    expect((new UpgradePackages)->toArray()['timeout'])->toBe(900)
+        ->and((new InstallPackages)->toArray()['timeout'])->toBe(900)
+        ->and((new Fail2ban)->toArray()['timeout'])->toBe(180);
 });
 
 function fakeServer(): Server

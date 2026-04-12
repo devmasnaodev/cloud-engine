@@ -11,6 +11,8 @@ final class UpgradePackages extends AbstractCommand
 {
     use WaitsForAptLock;
 
+    private const TIMEOUT_SECONDS = 900;
+
     public function id(): string
     {
         return 'apt-update-upgrade';
@@ -38,5 +40,10 @@ final class UpgradePackages extends AbstractCommand
     public function env(): array
     {
         return ['DEBIAN_FRONTEND' => 'noninteractive'];
+    }
+
+    public function toArray(): array
+    {
+        return array_merge(parent::toArray(), ['timeout' => self::TIMEOUT_SECONDS]);
     }
 }

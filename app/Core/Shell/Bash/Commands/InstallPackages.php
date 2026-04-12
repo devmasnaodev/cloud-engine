@@ -11,6 +11,8 @@ final class InstallPackages extends AbstractCommand
 {
     use WaitsForAptLock;
 
+    private const TIMEOUT_SECONDS = 900;
+
     /** @var array<int,string> */
     private array $packages;
 
@@ -55,6 +57,11 @@ final class InstallPackages extends AbstractCommand
     public function env(): array
     {
         return ['DEBIAN_FRONTEND' => 'noninteractive'];
+    }
+
+    public function toArray(): array
+    {
+        return array_merge(parent::toArray(), ['timeout' => self::TIMEOUT_SECONDS]);
     }
 
     /** Allow users to override packages after construction if desired. */

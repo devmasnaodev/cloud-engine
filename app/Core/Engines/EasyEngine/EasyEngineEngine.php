@@ -20,6 +20,10 @@ final class EasyEngineEngine implements EngineInterface
 {
     private const ENGINE_NAME = 'easyengine';
 
+    private const READ_TIMEOUT_SECONDS = 120;
+
+    private const MUTATING_TIMEOUT_SECONDS = 900;
+
     /**
      * Supported actions by this engine.
      *
@@ -257,9 +261,9 @@ final class EasyEngineEngine implements EngineInterface
     /**
      * Execute the command via SSH driver.
      *
-     * Uses RemoteCommandOptions::raw() (nothrow) so the executor never throws on
-     * non-zero exit status — we inspect exitStatus ourselves and raise
-     * CommandExecutionException with full context.
+     * Uses nothrow RemoteCommandOptions with an action-specific timeout so the
+     * executor never throws on non-zero exit status and long-running EasyEngine
+     * operations are not capped by the SSH connection default.
      *
      * @param  Server  $server  Server where the command will be executed
      * @param  string  $command  Command to execute
@@ -271,7 +275,15 @@ final class EasyEngineEngine implements EngineInterface
      */
     private function executeCommand(Server $server, string $command, string $action, ?callable $onOutput = null): array
     {
-        $result = $this->remoteCommandExecutor->run($server, $command, RemoteCommandOptions::raw(), $onOutput);
+        $result = $this->remoteCommandExecutor->run(
+            $server,
+            $command,
+            new RemoteCommandOptions(
+                nothrow: true,
+                timeout: $this->resolveTimeoutForAction($action),
+            ),
+            $onOutput,
+        );
 
         if ($result->exitStatus !== 0) {
             throw new CommandExecutionException(
@@ -284,5 +296,13 @@ final class EasyEngineEngine implements EngineInterface
             'stderr' => $result->stderr,
             'exitStatus' => $result->exitStatus,
         ];
+    }
+
+    private function resolveTimeoutForAction(string $action): int
+    {
+        return match ($action) {
+            'list_sites', 'site_info' => self::READ_TIMEOUT_SECONDS,
+            default => self::MUTATING_TIMEOUT_SECONDS,
+        };
     }
 }
