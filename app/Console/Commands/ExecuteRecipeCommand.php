@@ -34,17 +34,13 @@ final class ExecuteRecipeCommand extends Command
      */
     protected $description = 'Execute a provisioning recipe against a server';
 
-    public function __construct(
-        private readonly RecipeRunner $runner,
-        private readonly RecipeRegistry $registry,
-        private readonly ServerInfoDetector $serverInfoDetector,
-        private readonly Dispatcher $events,
-    ) {
-        parent::__construct();
-    }
-
-    public function handle(ServerPrompt $serverPrompt): int
-    {
+    public function handle(
+        ServerPrompt $serverPrompt,
+        RecipeRunner $runner,
+        RecipeRegistry $registry,
+        ServerInfoDetector $serverInfoDetector,
+        Dispatcher $events,
+    ): int {
         $serverId = $this->argument('server_id');
         $recipeName = (string) $this->argument('recipe');
 
@@ -67,7 +63,7 @@ final class ExecuteRecipeCommand extends Command
 
         // Interactive recipe selection
         if ((bool) $this->option('select')) {
-            $ids = $this->registry->ids();
+            $ids = $registry->ids();
 
             if (empty($ids)) {
                 $this->error('No recipes registered.');
@@ -79,10 +75,10 @@ final class ExecuteRecipeCommand extends Command
         }
 
         // Resolve recipe from registry
-        $recipe = $this->registry->find($recipeName);
+        $recipe = $registry->find($recipeName);
 
         if ($recipe === null) {
-            $this->error("Unknown recipe: {$recipeName}. Available: ".implode(', ', $this->registry->ids()));
+            $this->error("Unknown recipe: {$recipeName}. Available: ".implode(', ', $registry->ids()));
 
             return self::FAILURE;
         }
@@ -100,9 +96,9 @@ final class ExecuteRecipeCommand extends Command
                 is_string($this->option('execution-user')) ? $this->option('execution-user') : null,
             );
             $domainServer = $domainServer->withExecutionUsername($executionUsername);
-            $osInfo = $this->serverInfoDetector->detect($domainServer);
+            $osInfo = $serverInfoDetector->detect($domainServer);
 
-            if (! $this->serverInfoDetector->isSupported($osInfo)) {
+            if (! $serverInfoDetector->isSupported($osInfo)) {
                 $this->error('Unsupported server OS/version: '.json_encode($osInfo));
 
                 return self::FAILURE;
@@ -119,10 +115,10 @@ final class ExecuteRecipeCommand extends Command
         $this->newLine();
 
         // Register console progress listeners
-        $this->registerProgressListeners();
+        $this->registerProgressListeners($events);
 
         // Run
-        $result = $this->runner->run($recipe, $domainServer);
+        $result = $runner->run($recipe, $domainServer);
 
         $this->newLine();
 
@@ -142,9 +138,9 @@ final class ExecuteRecipeCommand extends Command
         return self::FAILURE;
     }
 
-    private function registerProgressListeners(): void
+    private function registerProgressListeners(Dispatcher $events): void
     {
-        $this->events->listen(RecipeStarted::class, function (RecipeStarted $event): void {
+        $events->listen(RecipeStarted::class, function (RecipeStarted $event): void {
             $this->line(sprintf(
                 '<fg=cyan>Starting "%s" (%d steps)...</>',
                 $event->recipe->name(),
@@ -152,7 +148,7 @@ final class ExecuteRecipeCommand extends Command
             ));
         });
 
-        $this->events->listen(RecipeStepStarted::class, function (RecipeStepStarted $event): void {
+        $events->listen(RecipeStepStarted::class, function (RecipeStepStarted $event): void {
             $this->newLine();
             $this->line(sprintf(
                 '<fg=yellow>[%d/%d]</> <options=bold>%s</>',
@@ -163,7 +159,7 @@ final class ExecuteRecipeCommand extends Command
             $this->line('<fg=gray>  '.$event->step->description().'</>');
         });
 
-        $this->events->listen(RecipeStepCompleted::class, function (RecipeStepCompleted $event): void {
+        $events->listen(RecipeStepCompleted::class, function (RecipeStepCompleted $event): void {
             $r = $event->result;
 
             if (! empty($r->stdout)) {
@@ -185,7 +181,7 @@ final class ExecuteRecipeCommand extends Command
             $this->line(sprintf('<fg=green>  ✓ done</> <fg=gray>(exit: %d, %.2fs)</>', $r->exitStatus, $r->duration));
         });
 
-        $this->events->listen(RecipeStepFailed::class, function (RecipeStepFailed $event): void {
+        $events->listen(RecipeStepFailed::class, function (RecipeStepFailed $event): void {
             $r = $event->result;
 
             if (! empty($r->stdout)) {
@@ -199,7 +195,7 @@ final class ExecuteRecipeCommand extends Command
             $this->error('  ✗ '.$event->reason);
         });
 
-        $this->events->listen(RecipeCompleted::class, function (RecipeCompleted $event): void {
+        $events->listen(RecipeCompleted::class, function (RecipeCompleted $event): void {
             // Outcome is printed by handle() after run() returns
         });
     }
