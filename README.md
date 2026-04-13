@@ -1,8 +1,19 @@
 [English](./README.md) | [Português](./README.pt-BR.md)
 
-# Cloud Engine
+ # <a href="https://devmasnaodev.github.io/cloud-engine-docs/" alt="Cloud Engine" target="_blank">
+   <img src="./.github/assets/cloud-engine-logo-text.svg" alt="Cloud Engine" width="620">
+ </p>
+ </a>
+ 
+ <p>
+   <a href="https://devmasnaodev.github.io/cloud-engine-docs/">Documentation</a> •
+   <a href="#getting-started">Getting Started</a>
+ </p>
 
 Cloud Engine is a developer-focused platform for managing WordPress VPS engines such as EasyEngine and WordOps. It is being built to centralize server provisioning, engine operations, and site lifecycle management behind a modern Laravel-based application.
+
+## Read the documentation
+https://devmasnaodev.github.io/cloud-engine-docs/
 
 > [!WARNING]
 > **Early-stage project:** Cloud Engine is still under active development and is **not ready for production use**. Use it only for testing, evaluation, and controlled environments.

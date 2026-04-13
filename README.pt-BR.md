@@ -1,13 +1,21 @@
 [English](./README.md) | [Português](./README.pt-BR.md)
 
-# Cloud Engine
+ # <a href="https://devmasnaodev.github.io/cloud-engine-docs/" alt="Cloud Engine" target="_blank">
+   <img src="./.github/assets/cloud-engine-logo-text.svg" alt="Cloud Engine" width="620">
+ </p>
+ </a>
+ 
+ <p>
+   <a href="https://devmasnaodev.github.io/cloud-engine-docs/">Documentação</a> •
+   <a href="#comece-aqui">Comece aqui</a>
+ </p>
 
 Cloud Engine é uma plataforma voltada para desenvolvedores para gerenciar engines WordPress em VPS, como EasyEngine e WordOps. O projeto está sendo construído para centralizar provisionamento de servidores, operações das engines e o ciclo de vida dos sites em uma aplicação moderna baseada em Laravel.
 
 > [!WARNING]
 > **Projeto em estágio inicial:** o Cloud Engine ainda está em desenvolvimento ativo e **não está pronto para uso em produção**. Utilize apenas para testes, avaliação e ambientes controlados.
 
-## Getting Started
+## Comece aqui
 
 Este projeto usa **DDEV** como ambiente local de desenvolvimento.
 
@@ -20,20 +28,30 @@ Este projeto usa **DDEV** como ambiente local de desenvolvimento.
 
 1. Clone o repositório.
 2. Inicie o ambiente DDEV:
+
    ```bash
    ddev start
    ```
 3. Instale as dependências do projeto e faça o bootstrap da aplicação:
+
    ```bash
    ddev composer run setup
    ```
 4. Inicie os serviços de desenvolvimento:
+
    ```bash
    ddev composer run dev
    ```
 5. Abra a aplicação:
+
    ```bash
    ddev launch
+   ```
+
+### Simular o ambiente de produção ou uso local
+
+   ```bash
+   ddev exec npm run build && ddev artisan optimize && ddev artisan queue:work --tries=3 --timeout=90
    ```
 
 ### Comandos úteis para desenvolvimento
